@@ -174,6 +174,7 @@
           (send-failure-code condition)))
 
 (defun send (message &key (config *config*) (registration-ids *registration-ids*))
+  (check-type message message)
   (setf config (require-config config))
   (multiple-value-bind (response code)
       (http-request (config-send-endpoint config)
