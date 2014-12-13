@@ -30,8 +30,6 @@
            #:config-timeout
            #:*config*
            #:configure
-           #:config-required
-           #:store-api-key
            #:*registration-ids*
            #:set-registration-ids
            #:send-failure
@@ -137,7 +135,8 @@
   (:default-initargs
    :dry-run nil
    :send-endpoint "https://android.googleapis.com/gcm/send"
-   :timeout 20))
+   :timeout 20
+   :api-key nil))
 
 (defvar *config* nil)
 
@@ -149,27 +148,11 @@
                options))
   (values))
 
-(define-condition config-required (gcm-error)
-  ()
-  (:report "GCM configuration is required."))
-
 (defun require-config (config)
-  (if (and config (slot-boundp config 'api-key))
-      config
-      (restart-case
-          (error 'config-required)
-        (store-api-key (api-key)
-          :report "Provide an API key."
-          :interactive prompt-for-api-key
-          (cond (config
-                 (setf (slot-value config 'api-key) api-key)
-                 config)
-                (t
-                 (make-instance 'config :api-key api-key)))))))
-
-(defun prompt-for-api-key ()
-  (format t "Enter the API key: ")
-  (list (read-line)))
+  (when (null config)
+    (setf config (make-instance 'config)))
+  (check-type (slot-value config 'api-key) string)
+  config)
 
 ;;; Registration IDs
 
